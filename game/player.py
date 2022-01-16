@@ -74,3 +74,4 @@ class Player:
                 #check if the tree has less than 0 points
                 if obj.health < 0:
                    obj.name = "grass"
+

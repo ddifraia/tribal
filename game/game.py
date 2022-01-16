@@ -57,6 +57,27 @@ class Game:
         self.camera.update()
         self.hud.update()
 
+    def draw_env_element(self,obj):
+        if obj.name != "grass":
+            # extract tile
+            tile = obj.tile
+            # update render position
+            render_pos = obj.render_pos.copy()
+            # check if we are placing an element
+            position = (obj.render_pos[0] + self.world.grass_tiles.get_width() / 2 + self.camera.scroll.x,
+                        obj.render_pos[1] - TILE_SIZE + self.camera.scroll.y)
+
+            # make collision rect
+            obj.set_collision_rect(position)
+
+            # blit on screen
+            self.screen.blit(self.world.tiles[tile], position)
+
+            # Show tree rectange
+            if obj.name == "tree" and pg.key.get_pressed()[pg.K_SPACE]:
+                # update rect position
+                pg.draw.rect(self.screen, pg.Color("White"), obj.rect_coll, width=1)
+
     def draw(self):
         self.screen.fill((0,0,0))
         self.screen.blit(self.world.grass_tiles,(self.camera.scroll.x,self.camera.scroll.y))
@@ -64,40 +85,15 @@ class Game:
 
         for x in range(self.world.grid_length_x):
             for y in range(self.world.grid_length_y):
-
                 #extract object
                 obj = self.world.world[x][y]
-                #<<<<<<<<<<<<<<<<<<<< probably all of this should be a function
-                #check place object only if is not a grass tile
-                if obj.name != "grass":
-                    # extract tile
-                    tile = obj.tile
-                    #update render position
-                    render_pos = obj.render_pos.copy()
-                    #check if we are placing an element
-                    position = (obj.render_pos[0] + self.world.grass_tiles.get_width()/2 + self.camera.scroll.x,
-                                obj.render_pos[1] - TILE_SIZE + self.camera.scroll.y)
-
-                    #make collision rect
-                    obj.set_collision_rect(position)
-
-                    #blit on screen
-                    self.screen.blit(self.world.tiles[tile],position)
-
-                    #Show tree rectange
-                    if obj.name == "tree" and pg.key.get_pressed()[pg.K_SPACE]:
-                        #update rect position
-                        pg.draw.rect(self.screen, pg.Color("White"),obj.rect_coll, width=1)
-                    #>>>>>>>>>>> till here
-
-                    #here a function of builing on the same tile
-
-                    #Check if player harvest a tree
-                    self.player.harvest_tree(obj,self.screen,self.events(),self.resources)
+                #draw enviroment elements
+                self.draw_env_element(obj)
+                #Check if player harvest a tree
+                self.player.harvest_tree(obj,self.screen,self.events(),self.resources)
 
         #Draw hud
         self.hud.draw(self.screen)
-
 
         draw_text(self.screen,
                   'fps={}'.format(round(self.clock.get_fps())),
