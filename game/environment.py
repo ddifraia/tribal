@@ -22,12 +22,12 @@ class Tree:
 
         #type of object
         self.type = "enviroment"
-
         #image
         self.image = self.scale_image(image,w=128)
-
         #Rectange
         self.rect_coll = None
+        #state
+        self.state = "busy"
 
     def update(self):
         if self.health <= 0:
@@ -74,6 +74,15 @@ class Rock:
 
         # type of object
         self.type = "enviroment"
+        # state
+        self.state = "busy"
+
+        #collisions shapes
+        self.rect_coll = None
+        self.poly_coll = None
+
+    def set_collision_rect(self,render_pos):
+        self.rect_coll = self.image.get_rect(topleft=render_pos)
 
     def scale_image(self, image, w=None, h=None):
 
@@ -114,6 +123,12 @@ class Grass():
 
         # type of object
         self.type = "grass"
+        self.rect_coll = None
+        # state
+        self.state = "free"
+
+    def set_collision_rect(self,render_pos):
+        self.rect_coll = self.image.get_rect(topleft=render_pos)
 
     def scale_image(self, image, w=None, h=None):
 

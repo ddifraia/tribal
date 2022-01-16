@@ -3,7 +3,7 @@ import random
 import noise
 from .settings import TILE_SIZE
 from .environment import Tree,Rock,Grass
-
+from .utils import scale_image
 
 
 
@@ -92,7 +92,7 @@ class World:
         tree2 = pg.transform.scale(tree2, (128, 128))
         tree3 = pg.transform.scale(tree3, (128, 128))
         tree4 = pg.transform.scale(tree4, (128, 128))
-
+        hut = scale_image(hut,w=128)
         rock = pg.transform.scale(rock, (128, 128))
         grass = pg.transform.scale(grass,(128,128))
 

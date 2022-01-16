@@ -8,6 +8,7 @@ from .hud import Hud
 from .player import Player
 from .resources import Resources
 from .buildings import Hut
+from .environment import Grass
 
 
 class Game:
@@ -58,26 +59,44 @@ class Game:
         self.hud.update()
 
     def draw_env_element(self,obj):
-        if obj.type == "enviroment":
+        # check if we are placing an element
+        position = (obj.render_pos[0] + self.world.grass_tiles.get_width() / 2 + self.camera.scroll.x,
+                    obj.render_pos[1] - TILE_SIZE + self.camera.scroll.y)
+
+        pos_offset_x = self.world.grass_tiles.get_width() / 2 + self.camera.scroll.x
+        pos_offset_y = self.camera.scroll.y
+
+        #make collision rect
+        obj.set_collision_rect(position)
+
+        if obj.type == "enviroment" or obj.type == "building":
             # extract tile
             tile = obj.tile
             # update render position
             render_pos = obj.render_pos.copy()
-            # check if we are placing an element
-            position = (obj.render_pos[0] + self.world.grass_tiles.get_width() / 2 + self.camera.scroll.x,
-                        obj.render_pos[1] - TILE_SIZE + self.camera.scroll.y)
-
-            # make collision rect
-            obj.set_collision_rect(position)
 
             # blit on screen
             self.screen.blit(self.world.tiles[tile], position)
 
-            # Show tree rectangle
-            if obj.name == "tree" and pg.key.get_pressed()[pg.K_SPACE]:
-                # update rect position
-                pg.draw.rect(self.screen, pg.Color("White"), obj.rect_coll, width=1)
+        # Show tree rectangle
+        if obj.name == "tree" and pg.key.get_pressed()[pg.K_SPACE]:
+            # update rect position
+            pg.draw.rect(self.screen, pg.Color("White"), obj.rect_coll, width=1)
 
+        # Show grass rectangle and update isometric polygon position
+        if obj.name == "grass" and pg.key.get_pressed()[pg.K_LCTRL]:
+            # update rect position
+            new_pol = [(obj.iso_poly[0][0] + pos_offset_x,(obj.iso_poly[0][1]) + pos_offset_y),
+                        (obj.iso_poly[1][0] + pos_offset_x,(obj.iso_poly[1][1]) + pos_offset_y),
+                        (obj.iso_poly[2][0] + pos_offset_x,(obj.iso_poly[2][1]) + pos_offset_y),
+                        (obj.iso_poly[3][0] + pos_offset_x,(obj.iso_poly[3][1]) + pos_offset_y)]
+
+            new_pol = self.polygon_offset(obj.iso_poly,pos_offset_x,pos_offset_y)
+
+            obj.poly_coll = new_pol
+            pg.draw.polygon(self.screen, pg.Color("Red"),  obj.poly_coll, width=1)
+
+    #Main game drawing/display loop
     def draw(self):
         self.screen.fill((0,0,0))
         self.screen.blit(self.world.grass_tiles,(self.camera.scroll.x,self.camera.scroll.y))
@@ -85,7 +104,9 @@ class Game:
 
         for x in range(self.world.grid_length_x):
             for y in range(self.world.grid_length_y):
-                #extract object
+                # add building in correct grid pos if choosen by player >> update grid object with building
+                self.player_builds(self.world.world[x][y], x, y)
+                # extract the object
                 obj = self.world.world[x][y]
                 #draw enviroment elements
                 self.draw_env_element(obj)
@@ -108,7 +129,7 @@ class Game:
         self.screen.blit(self.world.tiles[tile], (render_pos[0] + self.width / 2, render_pos[1] + self.height / 8))
 
     #Function that places building in the right place
-    def player_builds(self,obj):
+    def player_builds(self,obj,x,y):
         #Check if player has selected a tile
         if self.hud.selected_tile is not None:
             # get mouse pos
@@ -118,8 +139,18 @@ class Game:
             if obj.rect_coll.collidepoint(mouse_pos) and mouse_action[0]:
                 #place the correct object in drid
                 if self.hud.selected_tile["name"] == "small_hut":
-                    obj
+                    self.world.world[x][y] = Hut(obj.pos_x,obj.pos_y,obj.render_pos)
 
+
+    def polygon_offset(self,iso_poly,pos_offset_x,pos_offset_y):
+        new_poly = []
+        for x,y in iso_poly:
+            x = x + pos_offset_x
+            y = y + pos_offset_y
+            coords = (x,y)
+            new_poly.append(coords)
+
+        return new_poly
 
 
 
