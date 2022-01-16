@@ -58,7 +58,7 @@ class Game:
         self.hud.update()
 
     def draw_env_element(self,obj):
-        if obj.name != "grass":
+        if obj.type == "enviroment":
             # extract tile
             tile = obj.tile
             # update render position
@@ -73,7 +73,7 @@ class Game:
             # blit on screen
             self.screen.blit(self.world.tiles[tile], position)
 
-            # Show tree rectange
+            # Show tree rectangle
             if obj.name == "tree" and pg.key.get_pressed()[pg.K_SPACE]:
                 # update rect position
                 pg.draw.rect(self.screen, pg.Color("White"), obj.rect_coll, width=1)
@@ -106,6 +106,20 @@ class Game:
 
     def draw_tile(self,render_pos,tile):
         self.screen.blit(self.world.tiles[tile], (render_pos[0] + self.width / 2, render_pos[1] + self.height / 8))
+
+    #Function that places building in the right place
+    def player_builds(self,obj):
+        #Check if player has selected a tile
+        if self.hud.selected_tile not None:
+            # get mouse pos
+            mouse_pos = pg.mouse.get_pos()
+            mouse_action = pg.mouse.get_pressed()
+            #check if mouse collide with object
+            if obj.rect_coll.collidepoint(mouse_pos) and mouse_action[0]:
+                #place the correct object in drid
+                if self.hud.selected_tile["name"] == "small_hut":
+                    obj
+
 
 
 

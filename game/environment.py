@@ -20,6 +20,9 @@ class Tree:
         self.grid = [self.pos_x, self.pos_y]
         self.state = "alive"
 
+        #type of object
+        self.type = "enviroment"
+
         #image
         self.image = self.scale_image(image,w=128)
 
@@ -69,6 +72,9 @@ class Rock:
         self.tile = tile
         self.image = self.scale_image(image, w=128)
 
+        # type of object
+        self.type = "enviroment"
+
     def scale_image(self, image, w=None, h=None):
 
         if (w == None) and (h == None):
@@ -106,6 +112,8 @@ class Grass():
 
         self.image = self.scale_image(image, w=128)
 
+        # type of object
+        self.type = "grass"
 
     def scale_image(self, image, w=None, h=None):
 
