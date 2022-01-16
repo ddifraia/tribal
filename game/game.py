@@ -110,7 +110,7 @@ class Game:
     #Function that places building in the right place
     def player_builds(self,obj):
         #Check if player has selected a tile
-        if self.hud.selected_tile not None:
+        if self.hud.selected_tile is not None:
             # get mouse pos
             mouse_pos = pg.mouse.get_pos()
             mouse_action = pg.mouse.get_pressed()
