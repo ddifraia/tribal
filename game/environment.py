@@ -1,4 +1,5 @@
 import pygame as pg
+import pybox2d as pb
 
 
 class Tree:
@@ -26,6 +27,7 @@ class Tree:
         self.image = self.scale_image(image,w=128)
         #Rectange
         self.rect_coll = None
+        self.poly_coll = None
         #state
         self.state = "busy"
 
@@ -59,6 +61,10 @@ class Tree:
 class Rock:
 
     def __init__(self, pos_x, pos_y, rect, iso_poly, render_pos, tile,image):
+
+        self.wood_cost = 0
+        self.food_cost = 0
+        self.rock_cost = 0
 
         self.pos_x = pos_x
         self.pos_y = pos_y
@@ -109,6 +115,9 @@ class Rock:
 class Grass():
 
     def __init__(self, pos_x, pos_y, rect, iso_poly, render_pos, tile,image):
+        self.wood_cost = 0
+        self.food_cost = 0
+        self.rock_cost = 0
 
         self.pos_x = pos_x
         self.pos_y = pos_y
@@ -118,13 +127,14 @@ class Grass():
         self.iso_poly = iso_poly
         self.render_pos = render_pos
         self.tile = tile
-
         self.image = self.scale_image(image, w=128)
 
         # type of object
         self.type = "grass"
         self.rect_coll = None
-        # state
+        self.poly_coll = None
+
+        #state
         self.state = "free"
 
     def set_collision_rect(self,render_pos):

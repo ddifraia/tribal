@@ -1,5 +1,8 @@
 import pygame as pg
 import sys
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
+
 from .world import World
 from .settings import TILE_SIZE
 from .utils import draw_text
@@ -82,19 +85,14 @@ class Game:
         if obj.name == "tree" and pg.key.get_pressed()[pg.K_SPACE]:
             # update rect position
             pg.draw.rect(self.screen, pg.Color("White"), obj.rect_coll, width=1)
+            new_pol = self.polygon_offset(obj.iso_poly, pos_offset_x, pos_offset_y)
+            obj.poly_coll = new_pol
+            pg.draw.polygon(self.screen, pg.Color("Green"), obj.poly_coll, width=1)
 
         # Show grass rectangle and update isometric polygon position
-        if obj.name == "grass" and pg.key.get_pressed()[pg.K_LCTRL]:
-            # update rect position
-            new_pol = [(obj.iso_poly[0][0] + pos_offset_x,(obj.iso_poly[0][1]) + pos_offset_y),
-                        (obj.iso_poly[1][0] + pos_offset_x,(obj.iso_poly[1][1]) + pos_offset_y),
-                        (obj.iso_poly[2][0] + pos_offset_x,(obj.iso_poly[2][1]) + pos_offset_y),
-                        (obj.iso_poly[3][0] + pos_offset_x,(obj.iso_poly[3][1]) + pos_offset_y)]
-
+        if obj.name == "grass":
             new_pol = self.polygon_offset(obj.iso_poly,pos_offset_x,pos_offset_y)
-
             obj.poly_coll = new_pol
-            pg.draw.polygon(self.screen, pg.Color("Red"),  obj.poly_coll, width=1)
 
     #Main game drawing/display loop
     def draw(self):
@@ -135,11 +133,15 @@ class Game:
             # get mouse pos
             mouse_pos = pg.mouse.get_pos()
             mouse_action = pg.mouse.get_pressed()
+
             #check if mouse collide with object
             if obj.rect_coll.collidepoint(mouse_pos) and mouse_action[0]:
-                #place the correct object in drid
-                if self.hud.selected_tile["name"] == "small_hut":
-                    self.world.world[x][y] = Hut(obj.pos_x,obj.pos_y,obj.render_pos)
+                #use Polygon <<
+                point = Point(mouse_pos[0],mouse_pos[1])
+                polygon = Polygon(obj.poly_coll)
+                #If mouse is inside isometric polygon
+                if polygon.contains(point):
+                    self.place_buildings(obj,x,y)
 
 
     def polygon_offset(self,iso_poly,pos_offset_x,pos_offset_y):
@@ -152,5 +154,11 @@ class Game:
 
         return new_poly
 
-
-
+    #function that place the different buildings
+    def place_buildings(self,obj,x,y):
+        if self.hud.selected_tile["name"] == "small_hut":
+            # check if you have resources
+            if self.resources.w >= self.resources.hut_cost_w:
+                self.world.world[x][y] = Hut(obj.pos_x, obj.pos_y, obj.render_pos)
+                #remove resources
+                self.resources.w -= self.resources.hut_cost_w

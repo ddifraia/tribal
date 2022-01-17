@@ -24,3 +24,7 @@ def scale_image(image,w=None,h=None):
         image = pg.transform.scale(image,(int(w),int(h)))
 
     return image
+
+
+    if pos[0] > iso_poly[0][0]:
+        pass

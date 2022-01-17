@@ -7,7 +7,7 @@ class Hut:
 
     def __init__(self,pos_x,pos_y,render_pos):
 
-        self.wood_cost = 30
+        self.wood_cost = 10
         self.food_cost = 0
         self.rock_cost = 0
 
@@ -32,6 +32,7 @@ class Hut:
 
         # Rectange
         self.rect_coll = None
+        self.poly_coll = None
 
     #create collision rect according to render
     def set_collision_rect(self, render_pos):

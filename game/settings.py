@@ -3,3 +3,6 @@ SCROLL_SPEED = 3
 PLAYER_HEALTH = 50
 
 RES_WOOD = 0
+
+#hut cost
+HUT_COST_W = 10
