@@ -1,6 +1,7 @@
 import pygame as pg
 from .settings import PLAYER_HEALTH
 from .utils import draw_text
+from .projectile import Projectile
 from .settings import RES_WOOD
 from .resources import Resources
 
@@ -15,6 +16,7 @@ class Player:
         self.rect = self.images["player_static"].get_rect(topleft=(self.width/2,self.height/2))
         self.state = "static"
         self.event = pg.event
+        self.projectiles = None
 
     def scale_image(self,image,w=None,h=None):
 
@@ -55,7 +57,7 @@ class Player:
         elif self.state == "axe":
             screen.blit(self.load_images()["player_axe"],(self.width/2,self.height/2))
 
-    def harvest_tree(self,obj,screen,events,resources):
+    def harvest_tree(self,obj,screen,resources):
         #only if the object is a tree
         if obj.name == "tree":
 
@@ -75,6 +77,7 @@ class Player:
                 if obj.health < 0:
                    obj.name = "grass"
                    obj.type = "grass"
+
 
 
 

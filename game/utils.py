@@ -28,3 +28,9 @@ def scale_image(image,w=None,h=None):
 
     if pos[0] > iso_poly[0][0]:
         pass
+
+
+def cart_to_iso(x,y):
+     iso_x = x - y
+     iso_y = (x + y) / 2
+     return iso_x,iso_y

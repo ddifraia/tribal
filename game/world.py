@@ -17,9 +17,14 @@ class World:
         self.height = height
         self.grass_tiles = pg.Surface((grid_length_x * TILE_SIZE * 2, grid_length_y * TILE_SIZE * 2)).convert_alpha()
 
+        self.map_border = None
+
         self.perlin_scale = grid_length_x/10
         self.tiles = self.load_images()
         self.world = self.create_world()
+
+        #animal list
+        self.animal = []
 
     def create_world(self):
         #initialize grid

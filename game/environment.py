@@ -1,5 +1,8 @@
+import random
+
 import pygame as pg
 import pybox2d as pb
+from .utils import scale_image
 
 
 class Tree:
@@ -159,6 +162,56 @@ class Grass():
 
 
 
+class Animal:
+
+    def __init__(self,x,y):
+
+        self.health = 50
+        self.speed = 0.5
+        self.food = 10
+
+        self.x = x
+        self.y = y
+
+        self.rand_move = random.randint(60,300)
+        self.move_dir = random.randint(1,6)
+        self.move_time = random.randint(60,800)
+
+        #load sprite
+        sprite = pg.image.load("assets/graphics/food.png").convert_alpha()
+        self.sprite = scale_image(sprite,w=20)
+
+    def move(self):
+        #move on x axis
+        #Random movement
+        if self.move_dir == 1 and self.rand_move > 0:
+            #for how much
+            self.x += self.speed
+            self.y += self.speed / 2
+            self.rand_move -= self.speed
+        elif self.move_dir == 2 and self.rand_move > 0:
+            self.x -= self.speed
+            self.y -= self.speed / 2
+            self.rand_move -= self.speed
+        elif self.move_dir == 3 and self.rand_move > 0:
+            self.y -= self.speed / 2
+            self.x += self.speed
+            self.rand_move -= self.speed
+        elif self.move_dir == 4 and self.rand_move > 0:
+            self.y += self.speed / 2
+            self.x -= self.speed
+            self.rand_move -= self.speed
+        elif self.move_dir == 5 and self.rand_move > 0:
+            self.y += self.speed
+            self.rand_move -= self.speed
+        elif self.move_dir == 6 and self.rand_move > 0:
+            self.y -= self.speed
+            self.rand_move -= self.speed
+
+        #check if random movement is finished
+        if self.rand_move <= 0:
+            self.move_dir = random.randint(1,8)
+            self.rand_move = random.randint(60,300)
 
 
 

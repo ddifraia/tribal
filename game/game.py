@@ -1,3 +1,5 @@
+import random
+
 import pygame as pg
 import sys
 from shapely.geometry import Point
@@ -11,7 +13,8 @@ from .hud import Hud
 from .player import Player
 from .resources import Resources
 from .buildings import Hut
-from .environment import Grass
+from .environment import Grass,Animal
+from .projectile import Projectile
 
 
 class Game:
@@ -22,7 +25,7 @@ class Game:
         self.clock = clock
         self.width,self.height = screen.get_size()
         #Create World
-        self.world = World(20,20,self.width,self.height)
+        self.world = World(30,30,self.width,self.height)
         #Add Camera
         self.camera = Camera(self.width,self.height,self.world.grid_length_x,self.world.grid_length_y)
 
@@ -32,6 +35,8 @@ class Game:
         self.resources = Resources(0, 0, 0)
         # Hud
         self.hud = Hud(self.width, self.height, self.world, self.player,self.resources)
+        #projectile
+        self.projectile = []
 
     def run(self):
         self.playing = True
@@ -51,11 +56,16 @@ class Game:
                 if event.key == pg.K_ESCAPE:
                     pg.quit()
                     sys.exit()
+                #Check if we need to load a projectile
+                self.inizialize_projectile(event=event)
 
-            #check if there is a mouse left click
-            if event.type == pg.MOUSEBUTTONDOWN:
-               if event.button == 1:
-                   return "left_click"
+            if event.type == pg.KEYUP:
+                if event.key == pg.K_LALT:
+                    self.projectile.append(self.player.projectiles)
+                    self.player.projectiles = None
+
+        #Check if we need to load a projectiles
+        self.load_projectiles()
 
     def update(self):
         self.camera.update()
@@ -96,10 +106,14 @@ class Game:
 
     #Main game drawing/display loop
     def draw(self):
+        self.set_map_border()
         self.screen.fill((0,0,0))
         self.screen.blit(self.world.grass_tiles,(self.camera.scroll.x,self.camera.scroll.y))
+        self.move_projectiles()
+        self.spread_animal(p=10)
         self.hud.draw_player(self.screen)
 
+        #print world tiles and check player actions
         for x in range(self.world.grid_length_x):
             for y in range(self.world.grid_length_y):
                 # add building in correct grid pos if choosen by player >> update grid object with building
@@ -108,18 +122,13 @@ class Game:
                 obj = self.world.world[x][y]
                 #draw enviroment elements
                 self.draw_env_element(obj)
-                #Check if player harvest a tree
-                self.player.harvest_tree(obj,self.screen,self.events(),self.resources)
+                #Check if player harvest a tree <<< this could probably be removed from here
+                self.player.harvest_tree(obj,self.screen,self.resources)
+
 
         #Draw hud
         self.hud.draw(self.screen)
-
-        draw_text(self.screen,
-                  'fps={}'.format(round(self.clock.get_fps())),
-                  25,
-                  (255,255,255),
-                  (0,0))
-
+        draw_text(self.screen,'fps={}'.format(round(self.clock.get_fps())),25,(255,255,255),(0,0))
         #update display
         pg.display.flip()
 
@@ -143,7 +152,6 @@ class Game:
                 if polygon.contains(point):
                     self.place_buildings(obj,x,y)
 
-
     def polygon_offset(self,iso_poly,pos_offset_x,pos_offset_y):
         new_poly = []
         for x,y in iso_poly:
@@ -162,3 +170,99 @@ class Game:
                 self.world.world[x][y] = Hut(obj.pos_x, obj.pos_y, obj.render_pos)
                 #remove resources
                 self.resources.w -= self.resources.hut_cost_w
+
+    def spread_animal(self,p=100):
+        # always place an animal
+        if random.randint(1, p) == 2 and len(self.world.animal) <= 3:
+
+            x_pos = random.randint(min([i[0] for i in self.world.map_border]),max([i[0] for i in self.world.map_border]))
+            y_pos = random.randint(min([i[1] for i in self.world.map_border]),max([i[1] for i in self.world.map_border]))
+            p = Point(x_pos,y_pos)
+            poly = Polygon(self.world.map_border)
+
+            if poly.contains(p):
+                #check if x_pos and y_pos collide with grass surface
+                animal = Animal(x_pos, y_pos)
+                self.world.animal.append(animal)
+
+        # for all animals
+        for animal in self.world.animal:
+            animal.move()
+            self.screen.blit(animal.sprite, (animal.x + self.camera.scroll.x,
+                                             animal.y + self.camera.scroll.y))
+            if animal.move_time <= 0:
+                del animal
+            #pos
+            pos = Point(animal.x,animal.y)
+            poly = Polygon(self.world.map_border)
+
+            #if it goes outise the map delete
+            if not poly.contains(pos):
+                self.world.animal.remove(animal)
+
+    def set_map_border(self):
+        #Take map border
+        rect = self.world.grass_tiles.get_rect()
+        rect.width = rect.width / 2
+        rect.height = rect.height / 2
+        #add camera offset
+        pos_offset_x = self.world.grass_tiles.get_width() / 2 + self.camera.scroll.x
+        pos_offset_y = self.camera.scroll.y
+
+        # covert to a isometric polygon
+        poly = [rect.topleft, rect.topright,rect.bottomright, rect.bottomleft]
+        iso_poly = [self.world.cart_to_iso(x,y) for x,y in poly]
+        rect.x += pos_offset_x
+        rect.y += pos_offset_y
+
+        #create new polygon
+        new_pol = self.polygon_offset(iso_poly, pos_offset_x, pos_offset_y)
+
+        #show map border with shift
+        if pg.key.get_pressed()[pg.K_LSHIFT]:
+            pg.draw.polygon(self.screen, pg.Color("Red"), new_pol, width=2)
+
+        self.world.map_border = new_pol
+
+    ## Function for projectiles handling
+
+    def set_projectile_speed(self,speed=0):
+        if pg.key.get_pressed()[pg.K_LALT]:
+            speed += 1
+        if speed >= 10:
+            speed = 10
+        return speed
+
+    def draw_projective(self,projectile):
+        pg.draw.rect(self.screen,pg.Color("Brown"),projectile.rect,0)
+
+    def clean_projectiles(self,projectiles):
+        if projectiles.expires <= 0:
+            del projectiles
+
+    def move_projectiles(self):# draw projectiles <<<< function
+        for x in self.projectile:
+            x.move(self.camera.speed)
+            self.draw_projective(x)
+            self.clean_projectiles(x)
+
+    def load_projectiles(self):
+        # Check if we need to load projectile <<< function
+        if pg.key.get_pressed()[pg.K_LALT] and self.player.projectiles is not None:
+            load = 0.001
+            mouse_pos = pg.mouse.get_pos()
+            if mouse_pos[0] < (self.player.width / 2):
+                self.player.projectiles.speed -= 0.1
+            if mouse_pos[0] > (self.player.width / 2):
+                self.player.projectiles.speed += 0.1
+
+            if (self.player.projectiles.speed) >= 10:
+                self.player.projectiles.speed = 10 + random.randint(0, 3)
+            if (self.player.projectiles.speed) <= -10:
+                self.player.projectiles.speed = -10 + random.randint(0, 3)
+
+    def inizialize_projectile(self,event):
+        if event.key == pg.K_LALT and self.player.projectiles is None:
+            projectile = Projectile(self.player.width / 2, self.player.height / 2,
+                                    (self.player.height + 64) / 2, 0)
+            self.player.projectiles = projectile
