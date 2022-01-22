@@ -164,12 +164,14 @@ class Grass():
 
 class Animal:
 
-    def __init__(self,x,y):
+    def __init__(self,x,y,player):
 
         self.health = 50
         self.speed = 0.5
         self.food = 10
         self.is_alive = True
+        self.scared = False
+        self.scared_time = 200
 
         self.x = x
         self.y = y
@@ -178,6 +180,13 @@ class Animal:
         self.move_dir = random.randint(1,6)
         self.move_time = random.randint(60,800)
 
+
+        #perception
+        self.perception = pg.Rect(player.width /2,player.height /2,700,700)
+        self.perception.width = 250
+        self.perception.height = 250
+        self.perception.center = (player.width /2 + 20,player.height /2+20)
+
         #load sprite
         sprite = pg.image.load("assets/graphics/food.png").convert_alpha()
         self.sprite_dead = pg.image.load("assets/graphics/food_dead.png").convert_alpha()
@@ -185,32 +194,44 @@ class Animal:
         self.sprite = scale_image(sprite,w=20)
         self.rect = self.sprite.get_rect()
 
-    def move(self,camera):
+    def move(self,camera,player):
+
         #move on x axis
         #Random movement
-        if self.move_dir == 1 and self.rand_move > 0:
-            #for how much
-            self.x += (self.speed)
-            self.y += (self.speed / 2)
-            self.rand_move -= self.speed
-        elif self.move_dir == 2 and self.rand_move > 0:
-            self.x -= (self.speed)
-            self.y -= (self.speed / 2)
-            self.rand_move -= self.speed
-        elif self.move_dir == 3 and self.rand_move > 0:
-            self.y -= (self.speed / 2)
-            self.x += (self.speed)
-            self.rand_move -= self.speed
-        elif self.move_dir == 4 and self.rand_move > 0:
-            self.y += (self.speed / 2)
-            self.x -= (self.speed)
-            self.rand_move -= self.speed
-        elif self.move_dir == 5 and self.rand_move > 0:
-            self.y += (self.speed)
-            self.rand_move -= self.speed
-        elif self.move_dir == 6 and self.rand_move > 0:
-            self.y -= (self.speed)
-            self.rand_move -= self.speed
+        #Perception rect and check if is scared
+        if self.rect.colliderect(self.perception) and self.is_alive:
+            self.scared = True
+            self.speed = 2
+
+        #check if it is still scared
+        if self.scared:
+            self.scared_time -= 1
+        if self.scared_time < 0:
+            self.scared = False
+
+        if self.move_dir == 1 and self.rand_move > 0 or (self.scared and self.is_alive):
+                #for how much
+                self.x += (self.speed)
+                self.y += (self.speed / 2)
+                self.rand_move -= self.speed
+        elif self.move_dir == 2 and self.rand_move > 0 or (self.scared and self.is_alive):
+                self.x -= (self.speed)
+                self.y -= (self.speed / 2)
+                self.rand_move -= self.speed
+        elif self.move_dir == 3 and self.rand_move > 0 or (self.scared and self.is_alive):
+                self.y -= (self.speed / 2)
+                self.x += (self.speed)
+                self.rand_move -= self.speed
+        elif self.move_dir == 4 and self.rand_move > 0 or (self.scared and self.is_alive):
+                self.y += (self.speed / 2)
+                self.x -= (self.speed)
+                self.rand_move -= self.speed
+        elif self.move_dir == 5 and self.rand_move > 0 or (self.scared and self.is_alive):
+                self.y += (self.speed)
+                self.rand_move -= self.speed
+        elif self.move_dir == 6 and self.rand_move > 0 or (self.scared and self.is_alive):
+                self.y -= (self.speed)
+                self.rand_move -= self.speed
 
         #update position depending on player mov
         coords = update_coord_with_player_move(self.x,self.y,camera.speed)
@@ -230,6 +251,7 @@ class Animal:
     def show_health(self,screen):
         if pg.key.get_pressed()[pg.K_SPACE]:
             pg.draw.rect(screen, pg.Color('Red'),self.rect, width=1)
+            pg.draw.rect(screen, pg.Color('Blue'), self.perception, width=1)
             draw_text(screen, 'HP={}'.format(round(self.health)),20, (255, 255, 255),
                       (self.x, self.y - 60))
             draw_text(screen, 'Alive={}'.format(str(self.is_alive)), 20, pg.Color("White"),

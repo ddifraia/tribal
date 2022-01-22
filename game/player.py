@@ -17,6 +17,7 @@ class Player:
         self.state = "static"
         self.event = pg.event
         self.projectiles = None
+        self.projectiles_count = 1
 
     def scale_image(self,image,w=None,h=None):
 
@@ -97,4 +98,20 @@ class Player:
                           22, (255, 255, 255), (animal.x, animal.y - 50))
                 draw_text(screen,'Food={0:.1f}'.format((animal.food)),
                           22,(255,255,255),(animal.x,animal.y - 30))
+
+    def pick_projectile(self,objects):
+        mouse_pos = pg.mouse.get_pos()
+        #only if object class is projectile
+        for obj in objects:
+            if obj.__class__.__name__ == "Projectile":
+                #extend a bit the rectangle
+                new_rect = obj.rect.copy()
+                new_rect.width += 10
+                new_rect.height += 10
+                if self.rect.colliderect(obj.rect) and new_rect.collidepoint(mouse_pos):
+                    objects.remove(obj)
+                    self.projectiles_count += 1
+
+
+
 

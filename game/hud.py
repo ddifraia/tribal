@@ -112,6 +112,7 @@ class Hud:
 
         #draw the player
         self.player.draw(screen)
+        draw_text(screen,str(self.player.projectiles_count),20,pg.Color("White"),(self.player.width/2,self.player.height/2))
 
     def load_images(self):
 

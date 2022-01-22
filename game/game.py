@@ -26,7 +26,7 @@ class Game:
         self.width,self.height = screen.get_size()
 
         #Create World
-        self.world = World(20,20,self.width,self.height)
+        self.world = World(40,40,self.width,self.height)
 
         #Add Camera
         self.camera = Camera(self.width,self.height,self.world.grid_length_x,self.world.grid_length_y)
@@ -61,10 +61,11 @@ class Game:
                 #Check if we need to initialize a projectile
                 self.inizialize_projectile(event=event)
             if event.type == pg.KEYUP:
-                if event.key == pg.K_LALT:
+                if event.key == pg.K_LALT and self.player.projectiles_count>0:
                     #here it appends the projectile to the game
                     self.projectile.append(self.player.projectiles)
                     self.player.projectiles = None
+                    self.player.projectiles_count -= 1
             #mouse click
             if event.type == pg.MOUSEBUTTONDOWN:
                 #left click of the mouse
@@ -73,9 +74,12 @@ class Game:
                     # Control menu, select object
                     self.hud.select_tool(mouse_pos)
                     self.place_builing_in_grid()
+                    self.player.pick_projectile(self.projectile)
+
                 # if it is right click exit build mode
                 if event.button == 3:
                     self.hud.builds = False
+
             #mouse release button, when building, but not when selecting axe
             if event.type == pg.MOUSEBUTTONUP and self.hud.selected_tile is not None and self.hud.selected_tile["name"] != "axe":
                 if event.button == 1:
@@ -261,9 +265,10 @@ class Game:
 
     def inizialize_projectile(self,event):
         if event.key == pg.K_LALT and self.player.projectiles is None:
-            projectile = Projectile(self.player.width / 2, self.player.height / 2,
-                                    (self.player.height + 64) / 2, 0)
-            self.player.projectiles = projectile
+            if self.player.projectiles_count > 0:
+                projectile = Projectile(self.player.width / 2, self.player.height / 2,
+                                        (self.player.height + 64) / 2, 0)
+                self.player.projectiles = projectile
     #Managing animals, main animal manager
     #main animal manager
     def spread_animal(self, p=100):
@@ -279,12 +284,12 @@ class Game:
 
             if poly.contains(p):
                 # check if x_pos and y_pos collide with grass surface
-                animal = Animal(x_pos, y_pos)
+                animal = Animal(x_pos, y_pos,self.player)
                 self.world.animal.append(animal)
 
         # for all animals
         for animal in self.world.animal:
-            animal.move(camera=self.camera)
+            animal.move(camera=self.camera,player=self.player)
             self.screen.blit(animal.sprite, (animal.x,
                                              animal.y))
             if animal.move_time <= 0:
