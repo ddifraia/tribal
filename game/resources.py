@@ -9,7 +9,7 @@ class Resources:
         self.f = 0
 
         #Cost of bulding hut
-        self.hut_cost_w = 50
+        self.hut_cost_w = 1
         self.hut_cost_f = 0
         self.hut_cost_r = 0
 

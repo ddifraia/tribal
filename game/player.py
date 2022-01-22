@@ -78,8 +78,7 @@ class Player:
                    obj.name = "grass"
                    obj.type = "grass"
 
-
-    def harvest_food(self,animal,resources):
+    def harvest_food(self,animal,resources,screen):
         #get mouse pos
         mouse_pos = pg.mouse.get_pos()
         mouse_action = pg.mouse.get_pressed()
@@ -94,5 +93,8 @@ class Player:
             if animal.rect.collidepoint(mouse_pos) and mouse_action[0]:
                 animal.food -= harvest_rate
                 resources.f += harvest_rate
-
+                draw_text(screen, 'Harvesting',
+                          22, (255, 255, 255), (animal.x, animal.y - 50))
+                draw_text(screen,'Food={0:.1f}'.format((animal.food)),
+                          22,(255,255,255),(animal.x,animal.y - 30))
 

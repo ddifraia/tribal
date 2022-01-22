@@ -54,8 +54,7 @@ class Hut:
             image = pg.transform.scale(image, (int(w), int(h)))
 
         return image
+
     def produce(self):
-        while self.state == "produce":
-            os.wait(1)
-            self.timer += 1
+        pass
 

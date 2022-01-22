@@ -36,8 +36,7 @@ class World:
                 world[grid_x].append(world_tile)
 
                 render_pos = world_tile.render_pos
-                self.grass_tiles.blit(self.tiles["grass"],
-                                      (render_pos[0] + self.grass_tiles.get_width()/2,render_pos[1]))
+                self.grass_tiles.blit(self.tiles["grass"],(render_pos[0] + self.grass_tiles.get_width()/2,render_pos[1]))
 
         return world
 

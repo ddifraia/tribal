@@ -24,8 +24,10 @@ class Game:
         self.screen = screen
         self.clock = clock
         self.width,self.height = screen.get_size()
+
         #Create World
-        self.world = World(10,10,self.width,self.height)
+        self.world = World(20,20,self.width,self.height)
+
         #Add Camera
         self.camera = Camera(self.width,self.height,self.world.grid_length_x,self.world.grid_length_y)
 
@@ -63,6 +65,21 @@ class Game:
                     #here it appends the projectile to the game
                     self.projectile.append(self.player.projectiles)
                     self.player.projectiles = None
+            #mouse click
+            if event.type == pg.MOUSEBUTTONDOWN:
+                #left click of the mouse
+                if event.button == 1:
+                    mouse_pos = pg.mouse.get_pos()
+                    # Control menu, select object
+                    self.hud.select_tool(mouse_pos)
+                    self.place_builing_in_grid()
+                # if it is right click exit build mode
+                if event.button == 3:
+                    self.hud.builds = False
+            #mouse release button, when building, but not when selecting axe
+            if event.type == pg.MOUSEBUTTONUP and self.hud.selected_tile is not None and self.hud.selected_tile["name"] != "axe":
+                if event.button == 1:
+                    self.hud.builds = True
 
         #Check if we need to load a projectiles
         self.load_projectiles()
@@ -118,15 +135,14 @@ class Game:
         #print world tiles and check some player actions
         for x in range(self.world.grid_length_x):
             for y in range(self.world.grid_length_y):
-                # add building in correct grid pos if choosen by player >> update grid object with building
-                self.player_builds(self.world.world[x][y], x, y)
                 # extract the object
                 obj = self.world.world[x][y]
                 #draw enviroment elements
                 self.draw_env_element(obj)
                 #Check if player harvest a tree <<< this could probably be removed from here
                 self.player.harvest_tree(obj,self.screen,self.resources)
-
+                #mouse pos
+                mouse_pos = pg.mouse.get_pos()
 
         #Draw hud
         self.hud.draw(self.screen)
@@ -141,20 +157,18 @@ class Game:
 
     #Function that places building in the right place
     def player_builds(self,obj,x,y):
-        #Check if player has selected a tile
-        if self.hud.selected_tile is not None:
-            # get mouse pos
-            mouse_pos = pg.mouse.get_pos()
-            mouse_action = pg.mouse.get_pressed()
+        # get mouse pos
+        mouse_pos = pg.mouse.get_pos()
 
-            #check if mouse collide with object
-            if obj.rect_coll.collidepoint(mouse_pos) and mouse_action[0]:
-                #use Polygon <<
-                point = Point(mouse_pos[0],mouse_pos[1])
-                polygon = Polygon(obj.poly_coll)
-                #If mouse is inside isometric polygon
-                if polygon.contains(point):
-                    self.place_buildings(obj,x,y)
+        #check if mouse collide with object
+        if obj.rect_coll.collidepoint(mouse_pos):
+            #use Polygon <<
+            point = Point(mouse_pos[0],mouse_pos[1])
+            polygon = Polygon(obj.poly_coll)
+
+            #If mouse is inside isometric polygon
+            if polygon.contains(point):
+                self.place_buildings(obj,x,y)
 
     def polygon_offset(self,iso_poly,pos_offset_x,pos_offset_y):
         new_poly = []
@@ -167,46 +181,22 @@ class Game:
         return new_poly
 
     #function that place the different buildings
+    def place_builing_in_grid(self):
+        # check if we are builing mode
+        if self.hud.builds:
+            for x in range(self.world.grid_length_x):
+                for y in range(self.world.grid_length_y):
+                    obj = self.world.world[x][y]
+                    self.player_builds(obj, x, y)
+
     def place_buildings(self,obj,x,y):
+        #choose what to place << Hut
         if self.hud.selected_tile["name"] == "small_hut":
             # check if you have resources
             if self.resources.w >= self.resources.hut_cost_w:
                 self.world.world[x][y] = Hut(obj.pos_x, obj.pos_y, obj.render_pos)
                 #remove resources
                 self.resources.w -= self.resources.hut_cost_w
-
-    def spread_animal(self,p=100):
-        # always place an animal
-        if random.randint(1, p) == 2 and len(self.world.animal) <= 3:
-
-            x_pos = random.randint(min([i[0] for i in self.world.map_border]),max([i[0] for i in self.world.map_border]))
-            y_pos = random.randint(min([i[1] for i in self.world.map_border]),max([i[1] for i in self.world.map_border]))
-            p = Point(x_pos,y_pos)
-            poly = Polygon(self.world.map_border)
-
-            if poly.contains(p):
-                #check if x_pos and y_pos collide with grass surface
-                animal = Animal(x_pos, y_pos)
-                self.world.animal.append(animal)
-
-        # for all animals
-        for animal in self.world.animal:
-            animal.move(camera=self.camera)
-            self.screen.blit(animal.sprite, (animal.x,
-                                             animal.y))
-            if animal.move_time <= 0:
-                del animal
-
-            #pos
-            pos = Point(animal.x,animal.y)
-            poly = Polygon(self.world.map_border)
-
-            #check if the animal is harvested by player are harvested
-            self.player.harvest_food(animal=animal,resources=self.resources)
-
-            #if it goes outise the map delete
-            if not poly.contains(pos):
-                self.world.animal.remove(animal)
 
     def set_map_border(self):
         #Take map border
@@ -274,8 +264,49 @@ class Game:
             projectile = Projectile(self.player.width / 2, self.player.height / 2,
                                     (self.player.height + 64) / 2, 0)
             self.player.projectiles = projectile
+    #Managing animals, main animal manager
+    #main animal manager
+    def spread_animal(self, p=100):
+        # always place an animal
+        if random.randint(1, p) == 2 and len(self.world.animal) <= 3:
 
-    #Managing animal, check if projectile hits animal
+            x_pos = random.randint(min([i[0] for i in self.world.map_border]),
+                                   max([i[0] for i in self.world.map_border]))
+            y_pos = random.randint(min([i[1] for i in self.world.map_border]),
+                                   max([i[1] for i in self.world.map_border]))
+            p = Point(x_pos, y_pos)
+            poly = Polygon(self.world.map_border)
+
+            if poly.contains(p):
+                # check if x_pos and y_pos collide with grass surface
+                animal = Animal(x_pos, y_pos)
+                self.world.animal.append(animal)
+
+        # for all animals
+        for animal in self.world.animal:
+            animal.move(camera=self.camera)
+            self.screen.blit(animal.sprite, (animal.x,
+                                             animal.y))
+            if animal.move_time <= 0:
+                del animal
+
+            # pos
+            pos = Point(animal.x, animal.y)
+            poly = Polygon(self.world.map_border)
+
+            # check if the animal is harvested by player are harvested
+            self.player.harvest_food(animal=animal, resources=self.resources,
+                                     screen=self.screen)
+
+            # if it goes outise the map delete
+            if not poly.contains(pos):
+                self.world.animal.remove(animal)
+
+            # check if no food is left in animal, remove it
+            if animal.food <= 0:
+                self.world.animal.remove(animal)
+
+    #check if animal is hit
     def animal_hits(self):
         draw_text(self.screen,'cacca', 25, (255, 255, 255), (200, 200))
 
@@ -288,6 +319,7 @@ class Game:
                     anim.health -= damage
                     anim.check_alive()
 
+    #draw animal stats, and if is harvested
     def draw_animal_health(self):
         #show health and rectangle
         for an in self.world.animal:

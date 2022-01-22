@@ -1,4 +1,5 @@
 import pygame as pg
+from .settings import TILE_SIZE
 
 def draw_text(screen,text,size,color,pos):
     font = pg.font.SysFont(None,size)
@@ -45,4 +46,9 @@ def update_coord_with_player_move(x,y,camera_speed):
     if pg.key.get_pressed()[pg.K_a]:
         x += camera_speed
 
+    return (x,y)
+
+def pos_to_grid(x,y):
+    x = int(x / TILE_SIZE * 2)
+    y = int(y / TILE_SIZE / 2)
     return (x,y)

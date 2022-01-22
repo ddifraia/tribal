@@ -31,6 +31,7 @@ class Hud:
 
         #selected object
         self.selected_tile = None
+        self.builds = False
 
         #player
         self.player = player
@@ -74,11 +75,6 @@ class Hud:
 
         if mouse_action[2]:
             self.selected_tile = None
-
-        #Control menu
-        for tile in self.tiles:
-            if tile["rect"].collidepoint(mouse_pos) and  mouse_action[0]:
-                self.selected_tile = tile
 
     def draw(self,screen):
 
@@ -126,7 +122,6 @@ class Hud:
                 "axe":axe
                 }
 
-
     def scale_image(self,image,w=None,h=None):
 
         if (w == None) and (h==None):
@@ -143,3 +138,9 @@ class Hud:
             image = pg.transform.scale(image,(int(w),int(h)))
 
         return image
+
+    def select_tool(self,mouse_pos):
+        # Control menu
+        for tile in self.tiles:
+            if tile["rect"].collidepoint(mouse_pos):
+                self.selected_tile = tile
