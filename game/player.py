@@ -79,6 +79,20 @@ class Player:
                    obj.type = "grass"
 
 
-
+    def harvest_food(self,animal,resources):
+        #get mouse pos
+        mouse_pos = pg.mouse.get_pos()
+        mouse_action = pg.mouse.get_pressed()
+        #harverst rate
+        harvest_rate = 0.01
+        #check if is alive
+        if animal.is_alive:
+            return
+        #check if player collide with animal
+        if self.rect.colliderect(animal.rect):
+            #check if mouse is on animal and click left
+            if animal.rect.collidepoint(mouse_pos) and mouse_action[0]:
+                animal.food -= harvest_rate
+                resources.f += harvest_rate
 
 

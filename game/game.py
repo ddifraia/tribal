@@ -25,7 +25,7 @@ class Game:
         self.clock = clock
         self.width,self.height = screen.get_size()
         #Create World
-        self.world = World(30,30,self.width,self.height)
+        self.world = World(10,10,self.width,self.height)
         #Add Camera
         self.camera = Camera(self.width,self.height,self.world.grid_length_x,self.world.grid_length_y)
 
@@ -56,16 +56,18 @@ class Game:
                 if event.key == pg.K_ESCAPE:
                     pg.quit()
                     sys.exit()
-                #Check if we need to load a projectile
+                #Check if we need to initialize a projectile
                 self.inizialize_projectile(event=event)
-
             if event.type == pg.KEYUP:
                 if event.key == pg.K_LALT:
+                    #here it appends the projectile to the game
                     self.projectile.append(self.player.projectiles)
                     self.player.projectiles = None
 
         #Check if we need to load a projectiles
         self.load_projectiles()
+        #Check if animal is hit by projectile
+        self.animal_hits()
 
     def update(self):
         self.camera.update()
@@ -113,7 +115,7 @@ class Game:
         self.spread_animal(p=10)
         self.hud.draw_player(self.screen)
 
-        #print world tiles and check player actions
+        #print world tiles and check some player actions
         for x in range(self.world.grid_length_x):
             for y in range(self.world.grid_length_y):
                 # add building in correct grid pos if choosen by player >> update grid object with building
@@ -129,6 +131,8 @@ class Game:
         #Draw hud
         self.hud.draw(self.screen)
         draw_text(self.screen,'fps={}'.format(round(self.clock.get_fps())),25,(255,255,255),(0,0))
+        #show animal health with L_CTR
+        self.draw_animal_health()
         #update display
         pg.display.flip()
 
@@ -187,14 +191,18 @@ class Game:
 
         # for all animals
         for animal in self.world.animal:
-            animal.move()
-            self.screen.blit(animal.sprite, (animal.x + self.camera.scroll.x,
-                                             animal.y + self.camera.scroll.y))
+            animal.move(camera=self.camera)
+            self.screen.blit(animal.sprite, (animal.x,
+                                             animal.y))
             if animal.move_time <= 0:
                 del animal
+
             #pos
             pos = Point(animal.x,animal.y)
             poly = Polygon(self.world.map_border)
+
+            #check if the animal is harvested by player are harvested
+            self.player.harvest_food(animal=animal,resources=self.resources)
 
             #if it goes outise the map delete
             if not poly.contains(pos):
@@ -266,3 +274,22 @@ class Game:
             projectile = Projectile(self.player.width / 2, self.player.height / 2,
                                     (self.player.height + 64) / 2, 0)
             self.player.projectiles = projectile
+
+    #Managing animal, check if projectile hits animal
+    def animal_hits(self):
+        draw_text(self.screen,'cacca', 25, (255, 255, 255), (200, 200))
+
+        for anim in self.world.animal:
+            anim_rect = anim.rect
+            for prj  in self.projectile:
+                prj_rect = prj.rect
+                if abs(prj.speed) > 0 and anim_rect.colliderect(prj_rect):
+                    damage = abs(prj.speed) * 2
+                    anim.health -= damage
+                    anim.check_alive()
+
+    def draw_animal_health(self):
+        #show health and rectangle
+        for an in self.world.animal:
+            an.show_health(screen=self.screen)
+

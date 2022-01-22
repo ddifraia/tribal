@@ -34,3 +34,15 @@ def cart_to_iso(x,y):
      iso_x = x - y
      iso_y = (x + y) / 2
      return iso_x,iso_y
+
+def update_coord_with_player_move(x,y,camera_speed):
+    if pg.key.get_pressed()[pg.K_d]:
+        x -= camera_speed
+    if pg.key.get_pressed()[pg.K_w]:
+        y += camera_speed
+    if pg.key.get_pressed()[pg.K_s]:
+        y -= camera_speed
+    if pg.key.get_pressed()[pg.K_a]:
+        x += camera_speed
+
+    return (x,y)

@@ -2,7 +2,7 @@ import random
 
 import pygame as pg
 import pybox2d as pb
-from .utils import scale_image
+from .utils import scale_image,draw_text,update_coord_with_player_move
 
 
 class Tree:
@@ -169,6 +169,7 @@ class Animal:
         self.health = 50
         self.speed = 0.5
         self.food = 10
+        self.is_alive = True
 
         self.x = x
         self.y = y
@@ -179,40 +180,65 @@ class Animal:
 
         #load sprite
         sprite = pg.image.load("assets/graphics/food.png").convert_alpha()
-        self.sprite = scale_image(sprite,w=20)
+        self.sprite_dead = pg.image.load("assets/graphics/food_dead.png").convert_alpha()
 
-    def move(self):
+        self.sprite = scale_image(sprite,w=20)
+        self.rect = self.sprite.get_rect()
+
+    def move(self,camera):
         #move on x axis
         #Random movement
         if self.move_dir == 1 and self.rand_move > 0:
             #for how much
-            self.x += self.speed
-            self.y += self.speed / 2
+            self.x += (self.speed)
+            self.y += (self.speed / 2)
             self.rand_move -= self.speed
         elif self.move_dir == 2 and self.rand_move > 0:
-            self.x -= self.speed
-            self.y -= self.speed / 2
+            self.x -= (self.speed)
+            self.y -= (self.speed / 2)
             self.rand_move -= self.speed
         elif self.move_dir == 3 and self.rand_move > 0:
-            self.y -= self.speed / 2
-            self.x += self.speed
+            self.y -= (self.speed / 2)
+            self.x += (self.speed)
             self.rand_move -= self.speed
         elif self.move_dir == 4 and self.rand_move > 0:
-            self.y += self.speed / 2
-            self.x -= self.speed
+            self.y += (self.speed / 2)
+            self.x -= (self.speed)
             self.rand_move -= self.speed
         elif self.move_dir == 5 and self.rand_move > 0:
-            self.y += self.speed
+            self.y += (self.speed)
             self.rand_move -= self.speed
         elif self.move_dir == 6 and self.rand_move > 0:
-            self.y -= self.speed
+            self.y -= (self.speed)
             self.rand_move -= self.speed
+
+        #update position depending on player mov
+        coords = update_coord_with_player_move(self.x,self.y,camera.speed)
+
+        self.x = coords[0]
+        self.y = coords[1]
+
+        #update rect
+        self.rect.x = self.x
+        self.rect.y = self.y
 
         #check if random movement is finished
         if self.rand_move <= 0:
             self.move_dir = random.randint(1,8)
             self.rand_move = random.randint(60,300)
 
+    def show_health(self,screen):
+        if pg.key.get_pressed()[pg.K_SPACE]:
+            pg.draw.rect(screen, pg.Color('Red'),self.rect, width=1)
+            draw_text(screen, 'HP={}'.format(round(self.health)),20, (255, 255, 255),
+                      (self.x, self.y - 60))
+            draw_text(screen, 'Alive={}'.format(str(self.is_alive)), 20, pg.Color("White"),
+                      (self.x, self.y - 40))
+            draw_text(screen, 'Food={0:.0f}'.format(int(self.food)), 20, pg.Color("White"),
+                      (self.x, self.y - 30))
 
-
-
+    def check_alive(self):
+        if self.health <=0:
+            self.is_alive = False
+            self.speed = 0
+            self.sprite = scale_image(self.sprite_dead, w=20)

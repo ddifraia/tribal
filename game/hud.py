@@ -93,8 +93,10 @@ class Hud:
 
         #draw resource rect
         screen.blit(self.resources_surface,(0,0))
+
         #draw resource count
         draw_text(screen,'Wood: {0:.0f}'.format(self.resources.w),24,(255,255,255),(self.width-400,0))
+        draw_text(screen,'Food: {0:.0f}'.format(self.resources.f), 24, (255, 255, 255), (self.width - 300, 0))
 
         #build hub
         screen.blit(self.build_surface,(self.width * 0.85,self.height * 0.75))
