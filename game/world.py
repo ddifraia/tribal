@@ -95,6 +95,8 @@ class World:
         hut = pg.image.load('assets/graphics/hut01.png').convert_alpha()
         rock =  pg.image.load('assets/graphics/rock.png').convert_alpha()
         building_site = pg.image.load("assets/graphics/building_site.png").convert_alpha()
+        wall = pg.image.load("assets/graphics/wall.png").convert_alpha()
+        tower = pg.image.load("assets/graphics/tower.png").convert_alpha()
 
         tree = pg.transform.scale(tree, (128, 128))
         tree2 = pg.transform.scale(tree2, (128, 128))
@@ -103,13 +105,20 @@ class World:
         hut = scale_image(hut,w=128)
         rock = pg.transform.scale(rock, (128, 128))
         grass = pg.transform.scale(grass,(128,128))
+        wall = pg.transform.scale(wall,(128,128))
+        wall_flip = pg.transform.flip(wall,False, True)
+
+        building_site = pg.transform.scale(building_site,(128,128))
 
         return {"grass":grass,
                 "tree":tree,"tree2":tree2,
                 "tree3":tree3,"tree4":tree4,
                 "rock":rock,
                 "small_hut":hut,
-                "building_site":building_site}
+                "building_site":building_site,
+                "wall":wall,
+                "wall_flip": wall_flip,
+                "tower":tower}
 
     def cart_to_iso(self,x,y):
         iso_x = x - y

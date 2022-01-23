@@ -7,12 +7,12 @@ from shapely.geometry.polygon import Polygon
 
 from .world import World
 from .settings import TILE_SIZE
-from .utils import draw_text
+from .utils import draw_text,determineSide
 from .camera import Camera
 from .hud import Hud
 from .player import Player
 from .resources import Resources
-from .buildings import Hut
+from .buildings import Hut, Wall, Tower
 from .environment import Grass,Animal
 from .projectile import Projectile
 
@@ -26,13 +26,13 @@ class Game:
         self.width,self.height = screen.get_size()
 
         #Create World
-        self.world = World(40,40,self.width,self.height)
+        self.world = World(10,10,self.width,self.height)
+        # Player
+        self.player = Player(self.width, self.height)
 
         #Add Camera
-        self.camera = Camera(self.width,self.height,self.world.grid_length_x,self.world.grid_length_y)
+        self.camera = Camera(self.width,self.height,self.world.grid_length_x,self.world.grid_length_y,self.player)
 
-        #Player
-        self.player = Player(self.width,self.height)
         # Resources
         self.resources = Resources(0, 0, 0)
         # Hud
@@ -60,6 +60,9 @@ class Game:
                     sys.exit()
                 #Check if we need to initialize a projectile
                 self.inizialize_projectile(event=event)
+                if event.key == pg.K_r:
+                    self.rotate_builing_tile()
+
             if event.type == pg.KEYUP:
                 if event.key == pg.K_LALT and self.player.projectiles_count>0:
                     #here it appends the projectile to the game
@@ -94,6 +97,7 @@ class Game:
         self.hud.update()
 
     def draw_env_element(self,obj):
+
         # check if we are placing an element
         position = (obj.render_pos[0] + self.world.grass_tiles.get_width() / 2 + self.camera.scroll.x,
                     obj.render_pos[1] - TILE_SIZE + self.camera.scroll.y)
@@ -104,14 +108,25 @@ class Game:
         #make collision rect
         obj.set_collision_rect(position)
 
-        if obj.type == "enviroment" or obj.type == "building":
+        if obj.type == "enviroment":
             # extract tile
             tile = obj.tile
             # update render position
             render_pos = obj.render_pos.copy()
-
             # blit on screen
             self.screen.blit(self.world.tiles[tile], position)
+
+        if obj.type == "building":
+            tile = obj.tile
+            #tower must be placed with a biggest offset
+            if obj.name == "tower" and obj.complete:
+                h = (tile.get_height() + TILE_SIZE) / 2
+                self.screen.blit(tile, (position[0],position[1]-h))
+            else:
+                self.screen.blit(tile,position)
+            if pg.key.get_pressed()[pg.K_SPACE]:
+                pg.draw.rect(self.screen, pg.Color("Red"), obj.rect_coll)
+
 
         # Show tree rectangle
         if obj.name == "tree" and pg.key.get_pressed()[pg.K_SPACE]:
@@ -148,14 +163,14 @@ class Game:
                 self.player.builds_time(obj)
                 #draw any building process bar
                 self.draw_building_progress(obj)
-                #mouse pos
-                mouse_pos = pg.mouse.get_pos()
 
         #Draw hud
         self.hud.draw(self.screen)
         draw_text(self.screen,'fps={}'.format(round(self.clock.get_fps())),25,(255,255,255),(0,0))
         #show animal health with L_CTR
         self.draw_animal_health()
+        pg.draw.rect(self.screen,pg.Color("Blue"),self.player.base_rect)
+        draw_text(self.screen, self.player.move, 20, pg.Color("White"), (60, 60))
         #update display
         pg.display.flip()
 
@@ -201,11 +216,33 @@ class Game:
         #choose what to place << Hut
         if self.hud.selected_tile["name"] == "small_hut":
             # check if you have resources
+            tile = self.world.tiles["small_hut"]
+            #place a HUT <<<<<<<<<<<<<
             if self.resources.w >= self.resources.hut_cost_w:
-                self.world.world[x][y] = Hut(obj.pos_x, obj.pos_y, obj.render_pos)
+                self.world.world[x][y] = Hut(obj.pos_x, obj.pos_y, obj.render_pos,tile)
                 self.world.buildings.append(self.world.world[x][y])
                 #remove resources
                 self.resources.w -= self.resources.hut_cost_w
+
+        #place a WALL <<<<<<<<<<<<
+        if self.hud.selected_tile["name"] == "wall":
+            tile = self.world.tiles["wall"]
+            # check if you have resources
+            if self.resources.w >= self.resources.wall_cost_w:
+                self.world.world[x][y] = Wall(obj.pos_x, obj.pos_y, obj.render_pos,tile)
+                self.world.buildings.append(self.world.world[x][y])
+                # remove resources
+                self.resources.w -= self.resources.wall_cost_w
+
+        # place a TOWER <<<<<<<<<<<<
+        if self.hud.selected_tile["name"] == "tower":
+            tile = self.world.tiles["tower"]
+            # check if you have resources
+            if self.resources.w >= self.resources.wall_cost_w:
+               self.world.world[x][y] = Tower(obj.pos_x, obj.pos_y, obj.render_pos, tile)
+               self.world.buildings.append(self.world.world[x][y])
+               # remove resources
+               self.resources.w -= self.resources.wall_cost_w
 
     def set_map_border(self):
         #Take map border
@@ -239,6 +276,18 @@ class Game:
             draw_text(self.screen,text,20,pg.Color("White"),(obj.rect_coll.x,obj.rect_coll.y-40))
             #pg.draw.rect(self.screen,pg.Color("Blue"),obj.rect_coll,width=2)
             pg.draw.rect(self.screen, pg.Color("Green"), progress_bar)
+
+    def rotate_builing_tile(self):
+        #if we are in building mode
+        if self.hud.selected_tile is not None:
+            #Get selected tile from hud
+            tile =  self.hud.selected_tile["image"]
+            tile_name = self.hud.selected_tile["name"]
+            #rotate the selected tile and the tile in the world
+            tile_w = self.world.tiles[tile_name]
+
+            self.hud.selected_tile["image"] =  pg.transform.flip(tile,True,False)
+            self.world.tiles[tile_name] = pg.transform.flip(tile_w,True,False)
 
     ## Function for projectiles handling
 

@@ -14,10 +14,18 @@ class Player:
         self.health = PLAYER_HEALTH
         self.images = self.load_images()
         self.rect = self.images["player_static"].get_rect(topleft=(self.width/2,self.height/2))
+
         self.state = "static"
         self.event = pg.event
         self.projectiles = None
         self.projectiles_count = 1
+        self.base_rect = pg.Rect((self.width/2,self.height/2+self.rect.height-20),(self.rect.width,20))
+
+        #is colliding with something ?
+        self.collide_with = None
+
+        #can the player move ?
+        self.move = "free"
 
     def scale_image(self,image,w=None,h=None):
 
@@ -63,7 +71,7 @@ class Player:
         if obj.name == "tree":
 
             #function for harvesting tree
-            if self.rect.colliderect(obj.rect_coll) and self.state == "axe":
+            if self.rect.colliderect(obj.rect_coll):
                 #check if mouse is in position and on click
                 mouse_pos = pg.mouse.get_pos()
                 mouse_action = pg.mouse.get_pressed()
@@ -112,6 +120,7 @@ class Player:
                     obj.building_rect.width += 1
                     if obj.building_time <= 0:
                         obj.tile = obj.tile_complete
+                        obj.complete = True
                         return
 
     def pick_projectile(self,objects):

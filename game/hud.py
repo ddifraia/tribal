@@ -47,7 +47,7 @@ class Hud:
         #render pos
         render_pos = [self.width * 0.85 + 10,self.height * 0.75 + 10]
         #width of builing hud
-        object_width = self.build_surface.get_width() // 3
+        object_width = self.build_surface.get_width() // 4
 
         tiles = []
 
@@ -57,6 +57,7 @@ class Hud:
             image_scale = self.scale_image(image_tmp,w=object_width)
 
             rect = image_scale.get_rect(topleft=pos)
+
             tiles.append({
                 "name": image_names,
                 "icon": image_scale,
@@ -82,10 +83,8 @@ class Hud:
         if self.selected_tile is not None and self.selected_tile["name"] != "axe":
             img = self.selected_tile["image"].copy()
             img = self.scale_image(img,w=128)
-
             img.set_alpha(150)
-            screen.blit(img,(pg.mouse.get_pos()[0]-img.get_width()/2,
-                             pg.mouse.get_pos()[1]-img.get_height()/2))
+            screen.blit(img,(pg.mouse.get_pos()[0]-img.get_width()/2,pg.mouse.get_pos()[1]-img.get_height()))
 
         #draw resource rect
         screen.blit(self.resources_surface,(0,0))
@@ -117,10 +116,14 @@ class Hud:
     def load_images(self):
 
         hut = pg.image.load('assets/graphics/hut01.png').convert_alpha()
-        axe = pg.image.load('assets/graphics/axe.png').convert_alpha()
+        wall = pg.image.load("assets/graphics/wall.png").convert_alpha()
+        tower = pg.image.load("assets/graphics/tower.png").convert_alpha()
+        tower = self.scale_image(tower,w=64)
+
         return {
                 "small_hut": hut,
-                "axe":axe
+                "wall":wall,
+                "tower":tower
                 }
 
     def scale_image(self,image,w=None,h=None):

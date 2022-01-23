@@ -52,3 +52,13 @@ def pos_to_grid(x,y):
     x = int(x / TILE_SIZE * 2)
     y = int(y / TILE_SIZE / 2)
     return (x,y)
+
+def determineSide(rect1, rect2):
+    if rect1.midtop[1] > rect2.midtop[1]:
+        return "top"
+    elif rect1.midleft[0] > rect2.midleft[0]:
+        return "left"
+    elif rect1.midright[0] < rect2.midright[0]:
+        return "right"
+    else:
+        return "bottom"
