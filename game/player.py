@@ -99,6 +99,21 @@ class Player:
                 draw_text(screen,'Food={0:.1f}'.format((animal.food)),
                           22,(255,255,255),(animal.x,animal.y - 30))
 
+    def builds_time(self,obj):
+        if obj.type == "building" and obj.building_time > 0:
+            mouse_pos = pg.mouse.get_pos()
+            mouse_act = pg.mouse.get_pressed()
+            #if player is over the building site
+            if self.rect.colliderect(obj.rect_coll):
+                #check if it presses the left button
+                if obj.rect_coll.collidepoint(mouse_pos) and mouse_act[0]:
+                    obj.building_time -= 1
+                    obj.perc_completed = (obj.building_time_original - obj.building_time)/obj.building_time_original
+                    obj.building_rect.width += 1
+                    if obj.building_time <= 0:
+                        obj.tile = obj.tile_complete
+                        return
+
     def pick_projectile(self,objects):
         mouse_pos = pg.mouse.get_pos()
         #only if object class is projectile

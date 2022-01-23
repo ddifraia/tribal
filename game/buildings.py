@@ -18,11 +18,22 @@ class Hut:
         self.pos_y = pos_y
         self.render_pos = render_pos
 
-        self.tile = "small_hut"
+        self.tile = "building_site"
+        self.tile_complete = "small_hut"
 
-        #take image and scale
-        image = pg.image.load("assets/graphics/hut01.png").convert_alpha()
-        self.image = scale_image(image,w=128)
+        #take image and scale image for bulding site and not complete
+        self.image = pg.image.load("assets/graphics/building_site.png").convert_alpha()
+        self.complete = False
+
+        self.building_time = 200
+        self.building_time_original = self.building_time
+        self.perc_completed = 0
+
+        self.building_rect = pg.Rect((0,0),(0,4))
+
+        image_complete = pg.image.load("assets/graphics/hut01.png").convert_alpha()
+        self.image_complete = scale_image(image_complete,w=128)
+        self.rect = self.image_complete.get_rect()
 
         self.grid = [self.pos_x, self.pos_y]
         self.state = "alive"

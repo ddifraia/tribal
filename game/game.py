@@ -75,11 +75,9 @@ class Game:
                     self.hud.select_tool(mouse_pos)
                     self.place_builing_in_grid()
                     self.player.pick_projectile(self.projectile)
-
                 # if it is right click exit build mode
                 if event.button == 3:
                     self.hud.builds = False
-
             #mouse release button, when building, but not when selecting axe
             if event.type == pg.MOUSEBUTTONUP and self.hud.selected_tile is not None and self.hud.selected_tile["name"] != "axe":
                 if event.button == 1:
@@ -89,6 +87,7 @@ class Game:
         self.load_projectiles()
         #Check if animal is hit by projectile
         self.animal_hits()
+
 
     def update(self):
         self.camera.update()
@@ -145,6 +144,10 @@ class Game:
                 self.draw_env_element(obj)
                 #Check if player harvest a tree <<< this could probably be removed from here
                 self.player.harvest_tree(obj,self.screen,self.resources)
+                #player builds the object ?
+                self.player.builds_time(obj)
+                #draw any building process bar
+                self.draw_building_progress(obj)
                 #mouse pos
                 mouse_pos = pg.mouse.get_pos()
 
@@ -187,11 +190,12 @@ class Game:
     #function that place the different buildings
     def place_builing_in_grid(self):
         # check if we are builing mode
-        if self.hud.builds:
             for x in range(self.world.grid_length_x):
                 for y in range(self.world.grid_length_y):
                     obj = self.world.world[x][y]
-                    self.player_builds(obj, x, y)
+                    #if we are in building more we need to place buildings in grid
+                    if self.hud.builds:
+                        self.player_builds(obj, x, y)
 
     def place_buildings(self,obj,x,y):
         #choose what to place << Hut
@@ -199,6 +203,7 @@ class Game:
             # check if you have resources
             if self.resources.w >= self.resources.hut_cost_w:
                 self.world.world[x][y] = Hut(obj.pos_x, obj.pos_y, obj.render_pos)
+                self.world.buildings.append(self.world.world[x][y])
                 #remove resources
                 self.resources.w -= self.resources.hut_cost_w
 
@@ -225,6 +230,15 @@ class Game:
             pg.draw.polygon(self.screen, pg.Color("Red"), new_pol, width=2)
 
         self.world.map_border = new_pol
+
+    def draw_building_progress(self,obj):
+        if obj.type == "building" and obj.building_time > 0:
+            text = 'Building : {}'.format(round(obj.perc_completed*100))+"% completed..."
+            progress_bar = pg.Rect((obj.rect_coll.x,obj.rect_coll.y-20),(obj.building_rect.width,obj.building_rect.height))
+
+            draw_text(self.screen,text,20,pg.Color("White"),(obj.rect_coll.x,obj.rect_coll.y-40))
+            #pg.draw.rect(self.screen,pg.Color("Blue"),obj.rect_coll,width=2)
+            pg.draw.rect(self.screen, pg.Color("Green"), progress_bar)
 
     ## Function for projectiles handling
 

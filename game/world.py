@@ -23,6 +23,9 @@ class World:
         self.tiles = self.load_images()
         self.world = self.create_world()
 
+        #builing_list
+        self.buildings = []
+
         #animal list
         self.animal = []
 
@@ -91,6 +94,7 @@ class World:
         tree4 = pg.image.load('assets/graphics/tree4.png').convert_alpha()
         hut = pg.image.load('assets/graphics/hut01.png').convert_alpha()
         rock =  pg.image.load('assets/graphics/rock.png').convert_alpha()
+        building_site = pg.image.load("assets/graphics/building_site.png").convert_alpha()
 
         tree = pg.transform.scale(tree, (128, 128))
         tree2 = pg.transform.scale(tree2, (128, 128))
@@ -104,7 +108,8 @@ class World:
                 "tree":tree,"tree2":tree2,
                 "tree3":tree3,"tree4":tree4,
                 "rock":rock,
-                "small_hut":hut}
+                "small_hut":hut,
+                "building_site":building_site}
 
     def cart_to_iso(self,x,y):
         iso_x = x - y
